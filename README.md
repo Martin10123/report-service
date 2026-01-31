@@ -1,4 +1,39 @@
-# React + TypeScript + Vite
+# Reporte de servicios
+
+React + TypeScript + Vite + Supabase.
+
+## Estructura del proyecto (`src/`)
+
+```
+src/
+├── components/     # Componentes reutilizables
+│   ├── ui/         # Componentes base (ej. shadcn/ui)
+│   └── layout/     # Header, Sidebar, layouts
+├── features/       # Módulos por funcionalidad (componentes + lógica por feature)
+├── pages/          # Vistas/páginas (una por ruta)
+├── hooks/          # Custom hooks (useAuth, useLocalStorage, etc.)
+├── services/       # Servicios externos
+│   └── supabase/   # Cliente y helpers de Supabase
+├── types/          # Tipos TypeScript (database.types desde Supabase)
+├── stores/         # Estado global (Zustand)
+├── constants/      # Constantes y rutas
+├── config/         # Configuración de la app
+├── lib/            # Utilidades (cn, etc.)
+├── images/         # Assets estáticos
+├── App.tsx
+├── main.tsx
+└── index.css
+```
+
+## Supabase
+
+1. Copia `.env.example` a `.env`.
+2. En [Supabase Dashboard](https://app.supabase.com) → tu proyecto → **Settings** → **API** copia:
+   - **Project URL** → `VITE_SUPABASE_URL`
+   - **anon public** → `VITE_SUPABASE_ANON_KEY`
+3. Para generar tipos de la DB: `npx supabase gen types typescript --project-id TU_PROJECT_ID > src/types/database.types.ts`
+
+---
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
