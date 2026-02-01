@@ -15,7 +15,7 @@ export function AuthLayout({
   imageOnLeft = false,
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 grid grid-cols-1 lg:grid-cols-2 place-items-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full bg-linear-to-br from-blue-50 via-white to-indigo-50 grid grid-cols-1 lg:grid-cols-2 place-items-center p-4 sm:p-6 lg:p-8">
       {/* Col formulario */}
       <main
         className={cn(
@@ -43,7 +43,7 @@ export function AuthLayout({
           />
           <div
             className={cn(
-              'absolute inset-0 z-0 rounded-full bg-gradient-to-br from-blue-400/20 via-blue-500/10 to-indigo-400/20 blur-3xl animate-pulse',
+              'absolute inset-0 z-0 rounded-full bg-linear-to-br from-blue-400/20 via-blue-500/10 to-indigo-400/20 blur-3xl animate-pulse',
               imageOnLeft ? '-left-10' : '-right-10'
             )}
             aria-hidden

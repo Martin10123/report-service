@@ -1,18 +1,91 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { AuthLayout, AuthCard } from '@/components/layout';
 import { ROUTES } from '@/constants';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import {
+  signInWithPassword,
+  signInWithGoogle,
+  type AuthError,
+} from '@/services/supabase';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import loginImg from '@/images/login-img.svg';
 
+const loginSchema = z.object({
+  email: z.string().min(1, 'El correo es obligatorio').email('Correo no válido'),
+  password: z.string().min(1, 'La contraseña es obligatoria'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+function getAuthErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const msg = (error as AuthError).message;
+    if (msg.includes('Invalid login credentials')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    if (msg.includes('Email not confirmed')) {
+      return 'Confirma tu correo antes de iniciar sesión.';
+    }
+    if (msg.includes('Email rate limit exceeded') || msg.includes('rate limit')) {
+      return 'Demasiados intentos. Espera unos minutos.';
+    }
+    return msg;
+  }
+  return 'Error al iniciar sesión. Intenta de nuevo.';
+}
+
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const returnTo = (location.state as { from?: { pathname: string } })?.from?.pathname ?? ROUTES.DASHBOARD;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const emailPasswordMutation = useMutation({
+    mutationFn: ({ email, password }: LoginFormData) =>
+      signInWithPassword(email, password),
+    onSuccess: () => {
+      navigate(returnTo, { replace: true });
+    },
+  });
+
+  const googleMutation = useMutation({
+    mutationFn: () => signInWithGoogle(returnTo),
+    onSuccess: (data) => {
+      if (data?.url) window.location.href = data.url;
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    emailPasswordMutation.mutate(data);
+  });
+
+  const onGoogleClick = () => {
+    googleMutation.mutate();
+  };
+
+  const isPending =
+    emailPasswordMutation.isPending || googleMutation.isPending;
+  const errorMessage =
+    emailPasswordMutation.error != null
+      ? getAuthErrorMessage(emailPasswordMutation.error)
+      : null;
 
   return (
     <AuthLayout imageSrc={loginImg} imageAlt="Iniciar sesión" imageOnLeft={false}>
@@ -27,11 +100,16 @@ export function LoginPage() {
             </p>
           </div>
 
-          <form
-            className="space-y-5"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            {/* Email Field */}
+          {errorMessage && (
+            <div
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              role="alert"
+            >
+              {errorMessage}
+            </div>
+          )}
+
+          <form className="space-y-5" onSubmit={onSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Correo electrónico
@@ -44,14 +122,21 @@ export function LoginPage() {
                   placeholder="tu@ejemplo.com"
                   className="h-11 pl-10 rounded-xl border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all hover:border-gray-400"
                   autoComplete="email"
+                  disabled={isPending}
+                  {...register('email')}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
-            {/* Password Field */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Contraseña
                 </Label>
                 <Link
@@ -65,16 +150,20 @@ export function LoginPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className="h-11 pl-10 pr-10 rounded-xl border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all hover:border-gray-400"
                   autoComplete="current-password"
+                  disabled={isPending}
+                  {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={
+                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                  }
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -83,70 +172,70 @@ export function LoginPage() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <label
-                htmlFor="remember"
-                className="text-sm font-medium text-gray-700 cursor-pointer select-none"
-              >
-                Recordarme
-              </label>
-            </div>
-
-            {/* Submit Button */}
             <Button
               type="submit"
-              className="h-12 w-full rounded-xl cursor-pointer bg-blue-600 font-semibold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              className="h-12 w-full rounded-xl cursor-pointer bg-blue-600 font-semibold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+              disabled={isPending}
             >
-              Iniciar sesión
+              {emailPasswordMutation.isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Iniciando sesión...
+                </>
+              ) : (
+                'Iniciar sesión'
+              )}
             </Button>
           </form>
 
-          {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">O continúa con</span>
+              <span className="bg-white px-2 text-gray-500">
+                O continúa con
+              </span>
             </div>
           </div>
 
-          {/* Google Sign In */}
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full rounded-xl border-2 cursor-pointer border-gray-300 bg-white font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            className="h-12 w-full rounded-xl border-2 cursor-pointer border-gray-300 bg-white font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70"
+            disabled={isPending}
+            onClick={onGoogleClick}
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              />
-            </svg>
+            {googleMutation.isPending ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+            )}
             Iniciar sesión con Google
           </Button>
 
-          {/* Sign Up Link */}
           <p className="text-center text-sm text-gray-600 mt-2">
             ¿No tienes cuenta?{' '}
             <Link

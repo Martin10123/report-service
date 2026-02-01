@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -8,6 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { ROUTES } from '@/constants';
 import { usePerfilStore, getInitials, getNombreCompleto } from '@/stores';
+import { signOut } from '@/services/supabase';
 import { cn } from '@/lib/utils';
 
 interface UserMenuPopoverProps {
@@ -22,13 +24,22 @@ export function UserMenuPopover({
   showLabel = true,
 }: UserMenuPopoverProps) {
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
   const { nombre, apellido, email } = usePerfilStore();
   const initials = getInitials(nombre, apellido);
   const fullName = getNombreCompleto(nombre, apellido);
 
-  const handleLogout = () => {
-    // Con backend: limpiar token, etc.
-    navigate(ROUTES.LOGIN, { replace: true });
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut();
+      navigate(ROUTES.LOGIN, { replace: true });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      navigate(ROUTES.LOGIN, { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -79,8 +90,13 @@ export function UserMenuPopover({
           className="w-full justify-start gap-2 font-normal text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30 dark:hover:text-red-400"
           size="sm"
           onClick={handleLogout}
+          disabled={loggingOut}
         >
-          <LogOut className="h-4 w-4" />
+          {loggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
           Cerrar sesión
         </Button>
       </PopoverContent>

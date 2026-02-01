@@ -258,7 +258,7 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {/* Gráficos Recharts */}
+      {/* Gráficos Recharts: contenedor con tamaño fijo para evitar width/height -1 */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
@@ -266,8 +266,8 @@ export function DashboardPage() {
             <CardDescription>Personas por área (hoy)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[240px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="min-h-[240px] w-full min-w-0" style={{ height: 240 }}>
+              <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={dataPorArea} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
@@ -289,9 +289,9 @@ export function DashboardPage() {
             <CardDescription>Distribución del primer conteo</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[240px] w-full">
+            <div className="min-h-[240px] w-full min-w-0" style={{ height: 240 }}>
               {dataAdultosNinos.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie
                       data={dataAdultosNinos}
@@ -329,8 +329,8 @@ export function DashboardPage() {
           <CardDescription>Evolución de la asistencia</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[260px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="min-h-[260px] w-full min-w-0" style={{ height: 260 }}>
+            <ResponsiveContainer width="100%" height={260}>
               <AreaChart
                 data={dataUltimosServicios}
                 margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
@@ -339,7 +339,7 @@ export function DashboardPage() {
                   <linearGradient id="colorAsistencia" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3} />
                     <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
-                  </linearGradient>
+                </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="fecha" tick={{ fontSize: 12 }} />
