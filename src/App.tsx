@@ -5,6 +5,15 @@ import {
   DashboardPage,
   ProfilePage,
   PlaceholderPage,
+  PrimerConteoPage,
+  A1Page,
+  A2Page,
+  A3Page,
+  A4Page,
+  SobresPage,
+  ConsolidadoPage,
+  InformeFinalPage,
+  ConfiguracionPage,
 } from '@/pages';
 import { AppLayout } from '@/components/layout';
 import { ROUTES } from '@/constants';
@@ -18,18 +27,18 @@ function App() {
         <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
 
         {/* Rutas con layout (navbar + sidebar) */}
-        <Route element={<AppLayout userName="Usuario" userLastName="Demo" userEmail="usuario@demo.com" />}>
+        <Route element={<AppLayout />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-          <Route path={ROUTES.PRIMER_CONTEO} element={<PlaceholderPage title="Primer conteo" />} />
-          <Route path={ROUTES.A1} element={<PlaceholderPage title="A1" />} />
-          <Route path={ROUTES.A2} element={<PlaceholderPage title="A2" />} />
-          <Route path={ROUTES.A3} element={<PlaceholderPage title="A3" />} />
-          <Route path={ROUTES.A4} element={<PlaceholderPage title="A4" />} />
-          <Route path={ROUTES.SOBRES} element={<PlaceholderPage title="Sobres" />} />
+          <Route path={ROUTES.PRIMER_CONTEO} element={<PrimerConteoPage />} />
+          <Route path={ROUTES.A1} element={<A1Page />} />
+          <Route path={ROUTES.A2} element={<A2Page />} />
+          <Route path={ROUTES.A3} element={<A3Page />} />
+          <Route path={ROUTES.A4} element={<A4Page />} />
+          <Route path={ROUTES.SOBRES} element={<SobresPage />} />
           <Route path={ROUTES.SERVICIOS} element={<PlaceholderPage title="Servicios" />} />
-          <Route path={ROUTES.CONSOLIDADO} element={<PlaceholderPage title="Consolidado" />} />
-          <Route path={ROUTES.INFORME_FINAL} element={<PlaceholderPage title="Informe final" />} />
-          <Route path={ROUTES.CONFIGURACION} element={<PlaceholderPage title="Configuracion" />} />
+          <Route path={ROUTES.CONSOLIDADO} element={<ConsolidadoPage />} />
+          <Route path={ROUTES.INFORME_FINAL} element={<InformeFinalPage />} />
+          <Route path={ROUTES.CONFIGURACION} element={<ConfiguracionPage />} />
           <Route path={ROUTES.PERFIL} element={<ProfilePage />} />
         </Route>
 
