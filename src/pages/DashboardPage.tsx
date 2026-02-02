@@ -105,7 +105,7 @@ export function DashboardPage() {
   // Datos para línea/área de últimos servicios (invertidos: más reciente primero en eje)
   const dataUltimosServicios = [...ultimosServicios]
     .reverse()
-    .map((s, i) => ({
+    .map((s) => ({
       fecha: format(new Date(s.fecha + 'T12:00:00'), 'd/MM', { locale: es }),
       asistencia: s.totalAsistencia,
       servicio: s.servicio,
@@ -274,7 +274,7 @@ export function DashboardPage() {
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px' }}
-                    formatter={(value: number) => [value, 'Asistencia']}
+                    formatter={(value: number | undefined) => [value ?? 0, 'Asistencia']}
                   />
                   <Bar dataKey="asistencia" name="Asistencia" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -308,7 +308,7 @@ export function DashboardPage() {
                         <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => [value, 'Personas']} />
+                    <Tooltip formatter={(value: number | undefined) => [value ?? 0, 'Personas']} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -346,9 +346,9 @@ export function DashboardPage() {
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px' }}
-                  formatter={(value: number, _name, props: { payload: { servicio: string } }) => [
-                    value,
-                    props?.payload?.servicio ?? 'Asistencia',
+                  formatter={(value: number | undefined, _name, item) => [
+                    value ?? 0,
+                    (item?.payload as { servicio?: string } | undefined)?.servicio ?? 'Asistencia',
                   ]}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
